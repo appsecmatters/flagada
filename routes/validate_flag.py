@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from db import get_db
+from github_invite import invite_collaborator
 from routes.flags import _validate_value
 
 bp = Blueprint("validate", __name__)
@@ -16,7 +17,6 @@ def validate_flag():
 
     print(data)
     value = data.get("value", "")
-    print(value)
     if _validate_value(value):
         return jsonify({"found": False}), 200
 
@@ -46,6 +46,10 @@ def validate_flag():
     if status != "NOT_FOUND_YET":
         logging.error("Unexpected error: status is %s", status)
         return jsonify({"found": False}), 200
+
+    invited = invite_collaborator(username=owner)
+    if not invited:
+        return jsonify({"message": f"GitHub invite could not be sent to user {owner}"}), 500
 
     db.execute(
         "UPDATE flags SET status = 'FOUND', owner = ?, updated_at = ? WHERE value = ?",

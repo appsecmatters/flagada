@@ -2,6 +2,7 @@ import hashlib
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import jwt
 
@@ -24,8 +25,10 @@ class TestValidateFlag(unittest.TestCase):
         app.config["TESTING"] = True
         self.client = app.test_client()
         db.init_db()
+        self.mock_invite = patch("routes.validate_flag.invite_collaborator", return_value=True).start()
 
     def tearDown(self):
+        patch.stopall()
         os.close(self.db_fd)
         os.unlink(self.db_path)
         os.environ.pop("ADMIN_SECRET", None)
@@ -71,6 +74,20 @@ class TestValidateFlag(unittest.TestCase):
         response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user2"})
         self.assertEqual(response.status_code, 200)
         self.assertIn("Someone else already submitted this flag on", response.get_json()["message"])
+
+    def test_invite_failure_returns_500(self):
+        self._post_flag()
+        self.mock_invite.return_value = False
+        response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_json()["message"], "GitHub invite could not be sent to user user1")
+
+    def test_invite_failure_does_not_update_status(self):
+        self._post_flag()
+        self.mock_invite.return_value = False
+        self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
+        row = self.client.get(f"/flags/{self._hashed_value()}", headers=self._auth()).get_json()
+        self.assertEqual(row["status"], "NOT_FOUND_YET")
 
     def test_not_found_when_flag_absent(self):
         response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
