@@ -41,7 +41,7 @@ def validate_flag():
     if status == "FOUND":
         if row["owner"] == owner:
             return jsonify({"message": "You already submitted this flag"}), 200
-        return jsonify({"message": "Someone else already submitted this flag"}), 200
+        return jsonify({"message": f"Someone else already submitted this flag on {row['updated_at']}"}), 200
 
     if status != "NOT_FOUND_YET":
         logging.error("Unexpected error: status is %s", status)

@@ -55,7 +55,7 @@ class TestValidateFlag(unittest.TestCase):
         self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
         response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user2"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["message"], "Someone else already submitted this flag")
+        self.assertIn("Someone else already submitted this flag on", response.get_json()["message"])
 
     def test_not_found_when_flag_absent(self):
         response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})

@@ -85,6 +85,12 @@ def deprecate_flag(value):
     if row is None:
         return jsonify({"error": "flag not found"}), 404
 
+    if row["status"] == "DEPRECATED":
+        return jsonify({"error": "Already deprecated"}), 409
+
+    if row["status"] != "NOT_FOUND_YET":
+        return jsonify({"error": f"Invalid status: {row['status']}"}), 409
+
     db.execute(
         "UPDATE flags SET status = 'DEPRECATED', updated_at = ? WHERE value = ?",
         (_now(), hashed),
