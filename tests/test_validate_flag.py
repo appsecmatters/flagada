@@ -13,7 +13,7 @@ TEST_SECRET = "test-secret"
 
 
 def _make_token():
-    return jwt.encode({"sub": "test"}, TEST_SECRET, algorithm="HS256")
+    return jwt.encode({"sub": "test", "role": "admin"}, TEST_SECRET, algorithm="HS256")
 
 
 class TestValidateFlag(unittest.TestCase):
@@ -106,6 +106,18 @@ class TestValidateFlag(unittest.TestCase):
     def test_invalid_token_returns_401(self):
         response = self.client.get("/flags", headers={"Authorization": "Bearer badtoken"})
         self.assertEqual(response.status_code, 401)
+
+    def test_missing_role_claim_returns_403(self):
+        token = jwt.encode({"sub": "test"}, TEST_SECRET, algorithm="HS256")
+        response = self.client.get("/flags", headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json()["error"], "Forbidden")
+
+    def test_non_admin_role_returns_403(self):
+        token = jwt.encode({"sub": "test", "role": "user"}, TEST_SECRET, algorithm="HS256")
+        response = self.client.get("/flags", headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.get_json()["error"], "Forbidden")
 
 
 if __name__ == "__main__":

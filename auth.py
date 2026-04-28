@@ -18,11 +18,14 @@ def require_jwt(f):
             return jsonify({"error": "Server misconfiguration: ADMIN_SECRET not set"}), 500
 
         try:
-            jwt.decode(token, secret, algorithms=["HS256"])
+            payload = jwt.decode(token, secret, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token has expired"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
+
+        if payload.get("role") != "admin":
+            return jsonify({"error": "Forbidden"}), 403
 
         return f(*args, **kwargs)
     return decorated
