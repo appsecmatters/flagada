@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 
+from auth import require_jwt
 from db import get_db
 
 bp = Blueprint("flags", __name__)
@@ -24,12 +25,14 @@ def _validate_value(value):
 
 
 @bp.get("/flags")
+@require_jwt
 def list_flags():
     rows = get_db().execute("SELECT * FROM flags").fetchall()
     return jsonify([dict(r) for r in rows])
 
 
 @bp.post("/flags")
+@require_jwt
 def create_flag():
     data = request.get_json(silent=True) or {}
 
@@ -70,6 +73,7 @@ def create_flag():
 
 
 @bp.get("/flags/<value>")
+@require_jwt
 def get_flag(value):
     row = get_db().execute("SELECT * FROM flags WHERE value = ?", (value,)).fetchone()
     if row is None:
@@ -78,6 +82,7 @@ def get_flag(value):
 
 
 @bp.put("/deprecate_flag/<value>")
+@require_jwt
 def deprecate_flag(value):
     hashed = hashlib.sha256(value.encode()).hexdigest()
     db = get_db()
@@ -100,6 +105,7 @@ def deprecate_flag(value):
 
 
 @bp.delete("/flags/<value>")
+@require_jwt
 def delete_flag(value):
     db = get_db()
     row = db.execute("SELECT * FROM flags WHERE value = ?", (value,)).fetchone()
