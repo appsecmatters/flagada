@@ -26,6 +26,7 @@ def init_db():
             description      TEXT,
             status           TEXT NOT NULL DEFAULT 'NOT_FOUND_YET',
             owner            TEXT NOT NULL DEFAULT 'NA',
+            severity         TEXT NOT NULL DEFAULT 'NA',
             created_at       TEXT NOT NULL,
             updated_at       TEXT NOT NULL
         )

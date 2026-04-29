@@ -25,6 +25,8 @@ class TestValidateFlag(unittest.TestCase):
         app.config["TESTING"] = True
         self.client = app.test_client()
         db.init_db()
+        self.mock_user_exists = patch("routes.validate_flag.github_user_exists", return_value=True).start()
+        self.mock_create_repo = patch("routes.validate_flag.create_repository", return_value=True).start()
         self.mock_invite = patch("routes.validate_flag.invite_collaborator", return_value=True).start()
 
     def tearDown(self):

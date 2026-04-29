@@ -12,6 +12,7 @@ bp = Blueprint("flags", __name__)
 
 _HEX64 = re.compile(r"^[0-9a-fA-F]{64}$")
 _VALID_STATUSES = {"NOT_FOUND_YET", "FOUND", "DEPRECATED", "DELETED"}
+_VALID_SEVERITIES = {"NA", "EXCEPTIONAL", "CRITICAL", "HIGH", "MEDIUM", "LOW"}
 
 
 def _now():
@@ -55,14 +56,17 @@ def create_flag():
 
     description = data.get("description")
     owner = data.get("owner", "NA")
+    severity = data.get("severity", "NA")
+    if severity not in _VALID_SEVERITIES:
+        return jsonify({"error": f"severity must be one of {sorted(_VALID_SEVERITIES)}"}), 422
     ts = _now()
 
     db = get_db()
     try:
         db.execute(
-            "INSERT INTO flags (value, application_name, description, status, owner, created_at, updated_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (value, application_name, description, status, owner, ts, ts),
+            "INSERT INTO flags (value, application_name, description, status, owner, severity, created_at, updated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (value, application_name, description, status, owner, severity, ts, ts),
         )
         db.commit()
     except sqlite3.IntegrityError:

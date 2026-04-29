@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from db import get_db
-from github_invite import invite_collaborator
+from github_helper import create_repository, github_user_exists, invite_collaborator
 from routes.flags import _validate_value
 
 bp = Blueprint("validate", __name__)
@@ -15,7 +15,6 @@ bp = Blueprint("validate", __name__)
 def validate_flag():
     data = request.get_json(silent=True) or {}
 
-    print(data)
     value = data.get("value", "")
     if _validate_value(value):
         return jsonify({"found": False}), 200
@@ -47,7 +46,12 @@ def validate_flag():
         logging.error("Unexpected error: status is %s", status)
         return jsonify({"found": False}), 200
 
-    invited = invite_collaborator(username=owner)
+    if not github_user_exists(userid=owner):
+        return jsonify({"message": f"GitHub user {owner} does not exist"}), 422
+    if not create_repository(flag=value):
+        return jsonify({"message": f"GitHub repository could not be created for flag {value}"}), 500
+    
+    invited = invite_collaborator(username=owner, flag=value)
     if not invited:
         return jsonify({"message": f"GitHub invite could not be sent to user {owner}"}), 500
 
@@ -56,4 +60,4 @@ def validate_flag():
         (owner, datetime.now(timezone.utc).isoformat(), hashed),
     )
     db.commit()
-    return jsonify({"found": True}), 200
+    return jsonify({"found": True, "message": "You have been invited to a dedicated GitHub repository to provide the details on how you found this flag"}), 200
