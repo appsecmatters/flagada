@@ -2,13 +2,13 @@
 
 ```mermaid
 sequenceDiagram
-    actor Admin as Bug Bounty Admin
+    actor Researcher as Security Researcher
+    participant App as Deployed App with Flags
     participant Flagada
     participant DB as Flagada Sqlite DB
-    participant App as Deployed App with Flags
     participant GitHub as GitHub OSS Repo
     participant GitHub2 as GitHub Private Repo for Flag details
-    actor Researcher as Security Researcher
+    actor Admin as Bug Bounty Admin
 
     Admin->>App: Include Flags in App container
     Admin->>App: Deploy App container
