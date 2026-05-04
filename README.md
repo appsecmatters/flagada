@@ -25,8 +25,8 @@ Launch with command `python3 app.py`
 
 ## Documentation
 
-Proposed workflow for public GitHub repository is described in [sequence diagram](github_oss1.md). 
-Flagada API generated docs are available in the docs folder.
+Proposed workflow for public GitHub repository is described in [sequence diagram](github_oss1.md).  
+Flagada API generated docs are available in the `/docs` folder.
 
 ### Threat model
 
