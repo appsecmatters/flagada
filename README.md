@@ -32,7 +32,7 @@ Flagada API generated docs are available in the `/docs` folder.
 
 ### Threat model
 
-Flagadam, as a 3rd party tool, does not manage nor store sensitive bug bounty reports. It only helps processing proof of exploits via flags.  
+Flagada, as a 3rd party tool, does not manage nor store sensitive bug bounty reports. It only helps processing proof of exploits via flags.  
 Flagada does not know the flag values: the bug bounty admin and the security researcher provide a SHA256 of it.  
 This is considered good enough as anyhow the values should not be too easily predictable, otherwise the researcher would just bruteforce them.
 
@@ -43,5 +43,6 @@ For defense in depth, it is recommended to only make the `/validate_flag` endpoi
 
 ## Extension
 
+You can code your own workflow. To do so:
 1. In `routes/applications.py`, update `_VALID_WORKFLOWS` enum (e.g. replace TBD_WORKFLOW1)
 2. In `workflow_helper.py`, update execute_workflow with the code required (getting inspiration from method _run_github_oss_1)
