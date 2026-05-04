@@ -30,7 +30,8 @@ Flagada API generated docs are available in the docs folder.
 
 ### Threat model
 
-Flagada, as a 3rd party tool, should not know the flag values: the bug bounty admin and the security researcher provide a SHA256 of it.  
+Flagadam, as a 3rd party tool, does not manage nor store sensitive bug bounty reports. It only helps processing proof of exploits via flags.  
+Flagada does not know the flag values: the bug bounty admin and the security researcher provide a SHA256 of it.  
 This is considered good enough as anyhow the values should not be too easily predictable, otherwise the researcher would just bruteforce them.
 
 The flag hashes are also hashed another time before being stored in database to protect from anyone having access to the Sqlite DB file.
