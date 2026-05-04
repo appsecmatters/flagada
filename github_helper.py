@@ -8,9 +8,21 @@ import urllib.request
 
 import certifi
 
+from db import get_db
+
 
 def _flag_repo_name(flag):
-    return f"{os.environ.get('GITHUB_REPO')}_{flag}"
+    hashed = hashlib.sha256(flag.encode()).hexdigest()
+    db = get_db()
+    flag_row = db.execute("SELECT application_id FROM flags WHERE value = ?", (hashed,)).fetchone()
+    if flag_row is None:
+        logging.error("_flag_repo_name: flag not found for hash %s", hashed)
+        return None
+    app_row = db.execute("SELECT name FROM applications WHERE id = ?", (flag_row["application_id"],)).fetchone()
+    if app_row is None:
+        logging.error("_flag_repo_name: application not found for id %s", flag_row["application_id"])
+        return None
+    return f"{app_row['name']}_{flag}"
 
 
 def _make_request(url, method, payload=None):

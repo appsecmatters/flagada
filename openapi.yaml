@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Flagada
+  description: Bug bounty flag management API
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      # Token must be signed with HS256 using the ADMIN_SECRET environment variable.
+      # The JWT payload must include the claim "role" with the value "admin".
+      description: >
+        HS256-signed JWT. The token payload must contain `"role": "admin"`.
+        The signing secret is configured via the `ADMIN_SECRET` environment variable.
+
+  schemas:
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: my-app
+        url:
+          type: string
+          nullable: true
+          example: https://example.com
+        administrator:
+          type: string
+          nullable: true
+          example: alice
+        workflow_id:
+          type: string
+          enum: [GITHUB_OSS_1, TBD_WORKFLOW1, TBD_WORKFLOW2]
+          default: GITHUB_OSS_1
+
+    Flag:
+      type: object
+      properties:
+        value:
+          type: string
+          description: SHA256 hash of the original flag value
+          example: a3f1...
+        application_id:
+          type: integer
+          example: 1
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [NOT_FOUND_YET, FOUND, DEPRECATED, DELETED]
+          default: NOT_FOUND_YET
+        owner:
+          type: string
+          default: NA
+        severity:
+          type: string
+          enum: [NA, EXCEPTIONAL, CRITICAL, HIGH, MEDIUM, LOW]
+          default: NA
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ── Applications ──────────────────────────────────────────────────────────
+
+  /applications:
+    get:
+      summary: List all applications
+      tags: [Applications]
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+
+    post:
+      summary: Create an application
+      tags: [Applications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+                administrator:
+                  type: string
+                workflow_id:
+                  type: string
+                  enum: [GITHUB_OSS_1, TBD_WORKFLOW1, TBD_WORKFLOW2]
+                  default: GITHUB_OSS_1
+      responses:
+        '201':
+          description: Application created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /applications/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Get an application by ID
+      tags: [Applications]
+      responses:
+        '200':
+          description: Application found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update an application
+      tags: [Applications]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                url:
+                  type: string
+                administrator:
+                  type: string
+                workflow_id:
+                  type: string
+                  enum: [GITHUB_OSS_1, TBD_WORKFLOW1, TBD_WORKFLOW2]
+      responses:
+        '200':
+          description: Application updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete an application
+      tags: [Applications]
+      responses:
+        '200':
+          description: Application deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+                    example: true
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── Flags ─────────────────────────────────────────────────────────────────
+
+  /flags:
+    get:
+      summary: List all flags
+      tags: [Flags]
+      responses:
+        '200':
+          description: List of flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flag'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+
+    post:
+      summary: Create a flag
+      description: The value is SHA256-hashed before storage.
+      tags: [Flags]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value, application_id]
+              properties:
+                value:
+                  type: string
+                  description: 64-character hex string (SHA256 of the flag)
+                  pattern: '^[0-9a-fA-F]{64}$'
+                application_id:
+                  type: integer
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [NOT_FOUND_YET, FOUND, DEPRECATED, DELETED]
+                  default: NOT_FOUND_YET
+                owner:
+                  type: string
+                  default: NA
+                severity:
+                  type: string
+                  enum: [NA, EXCEPTIONAL, CRITICAL, HIGH, MEDIUM, LOW]
+                  default: NA
+      responses:
+        '201':
+          description: Flag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flag'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Flag already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /flags/{value}:
+    parameters:
+      - name: value
+        in: path
+        required: true
+        description: SHA256 hash of the flag value
+        schema:
+          type: string
+
+    get:
+      summary: Get a flag by its hashed value
+      tags: [Flags]
+      responses:
+        '200':
+          description: Flag found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flag'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Flag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Soft-delete a flag (sets status to DELETED)
+      tags: [Flags]
+      responses:
+        '200':
+          description: Flag deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Flag'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Flag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /deprecate_flag/{value}:
+    parameters:
+      - name: value
+        in: path
+        required: true
+        description: Raw flag value (will be SHA256-hashed internally)
+        schema:
+          type: string
+
+    put:
+      summary: Deprecate a flag (sets status to DEPRECATED)
+      tags: [Flags]
+      responses:
+        '200':
+          description: Flag deprecated
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: Insufficient role
+        '404':
+          description: Flag not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Flag already deprecated or has invalid status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ── Validate ──────────────────────────────────────────────────────────────
+
+  /validateFlag:
+    post:
+      summary: Validate a flag submission
+      description: >
+        Checks if the SHA256 hash of the submitted value matches a known flag.
+        On first valid submission, triggers the application workflow (GitHub invite, etc.)
+        and marks the flag as FOUND.
+      tags: [Validate]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value, owner]
+              properties:
+                value:
+                  type: string
+                  description: 64-character hex string (SHA256 of the flag)
+                  pattern: '^[0-9a-fA-F]{64}$'
+                owner:
+                  type: string
+                  description: GitHub username of the researcher
+      responses:
+        '200':
+          description: Result of the flag validation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                success:
+                  value:
+                    found: true
+                    message: You have been invited to a dedicated GitHub repository to provide the details on how you found this flag
+                not_found:
+                  value:
+                    found: false
+                already_submitted_same:
+                  value:
+                    message: You already submitted this flag
+                already_submitted_other:
+                  value:
+                    message: Someone else already submitted this flag on 2024-01-01T00:00:00+00:00
+                deprecated:
+                  value:
+                    message: Flag is outdated. Please try capturing its latest version
+        '422':
+          description: Missing owner or GitHub user does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: Workflow execution failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '501':
+          description: Workflow not implemented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
