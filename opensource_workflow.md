@@ -13,7 +13,7 @@ sequenceDiagram
     Admin->>App: Include Flags in App container
     Admin->>App: Deploy App container
     Admin->>Flagada: Create app (POST /applications with workflow type)
-    Admin->>Flagada: Import Flag hashes for this app(POST /flags)
+    Admin->>Flagada: Import Flag hashes for this app (POST /flags)
     Flagada->>DB: Persist double hashes of flags
     Admin->>GitHub: Update security policy with how to submit flag hashes
     Admin-->>GitHub: Optional: description of flags, naming convention, severity and payouts
@@ -23,6 +23,7 @@ sequenceDiagram
 
     Researcher->>Flagada: Submit flag hash (POST /validateFlag) and GitHub userid
     Flagada->>DB: Lookup hash(flag hash)
+    Flagada->>Flagada: Trigger workflow of corresponding app
 
     Flagada->>GitHub2: Create dedicated private repo
     Flagada->>GitHub2: Invite researcher with GitHub userid
