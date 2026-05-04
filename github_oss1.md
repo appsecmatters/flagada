@@ -12,7 +12,7 @@ The proposed workaround
 
 Identified drawbacks
 * Management overhead of 1 repo per finding (but this should be manageable if not too many flags are found in parallel)
-* Not directly possible to work on the fix in this repo (cloning would be slow and consume storage). But anyhow a unique security mirror is the best practice for releasing security patches..
+* Not directly possible to work on the fix in this repo (cloning would be slow and consume storage). But anyhow a unique security mirror is the best practice for releasing security patches.
 
 ## Sequence diagram
 

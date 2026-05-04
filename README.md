@@ -13,7 +13,7 @@ Prerequisites for this Flask app:
 
 Environment variables:
 * ADMIN_SECRET: HS256 secret used to authenticate the bug bounty admin endpoints
-* GITHUB_OWNER: GitHub userid of the bug bounty admin (a personal account as organizations are not managed yet, cf create_repository method in github_helper.py)
+* GITHUB_OWNER: GitHub userid of the bug bounty admin (a personal account as organizations are not managed yet, cf create_repository method in `github_helper.py`)
 * GITHUB_TOKEN: PAT token from this GITHUB_OWNER with access to all repositories and those fine grained permissions: Administraion Read and write, Contents Read only, Metadata Read only
 
 Database:
@@ -25,7 +25,7 @@ Launch with command `python3 app.py`
 
 ## Documentation
 
-Proposed workflow for public GitHub repository is described in github_oss1.md. 
+Proposed workflow for public GitHub repository is described in [sequence diagram](github_oss1.md). 
 Flagada API generated docs are available in the docs folder.
 
 ### Threat model
@@ -40,5 +40,5 @@ For defense in depth, it is recommended to only make the `/validate_flag` endpoi
 
 ## Extension
 
-1. In routes/applications.py, update `_VALID_WORKFLOWS` enum (e.g. replace TBD_WORKFLOW1)
-2. In workflow_helper.py, update execute_workflow with the code required (getting inspiration from method _run_github_oss_1)
+1. In `routes/applications.py`, update `_VALID_WORKFLOWS` enum (e.g. replace TBD_WORKFLOW1)
+2. In `workflow_helper.py`, update execute_workflow with the code required (getting inspiration from method _run_github_oss_1)
