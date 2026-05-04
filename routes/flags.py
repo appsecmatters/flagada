@@ -46,9 +46,13 @@ def create_flag():
 
     value = hashlib.sha256(value.encode()).hexdigest()
 
-    application_name = data.get("application_name")
-    if not application_name:
-        return jsonify({"error": "application_name is required"}), 422
+    application_id = data.get("application_id")
+    if not application_id:
+        return jsonify({"error": "application_id is required"}), 422
+
+    db = get_db()
+    if db.execute("SELECT 1 FROM applications WHERE id = ?", (application_id,)).fetchone() is None:
+        return jsonify({"error": "application not found"}), 404
 
     status = data.get("status", "NOT_FOUND_YET")
     if status not in _VALID_STATUSES:
@@ -61,12 +65,11 @@ def create_flag():
         return jsonify({"error": f"severity must be one of {sorted(_VALID_SEVERITIES)}"}), 422
     ts = _now()
 
-    db = get_db()
     try:
         db.execute(
-            "INSERT INTO flags (value, application_name, description, status, owner, severity, created_at, updated_at)"
+            "INSERT INTO flags (value, application_id, description, status, owner, severity, created_at, updated_at)"
             " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (value, application_name, description, status, owner, severity, ts, ts),
+            (value, application_id, description, status, owner, severity, ts, ts),
         )
         db.commit()
     except sqlite3.IntegrityError:

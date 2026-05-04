@@ -20,15 +20,24 @@ def close_db(e=None):
 def init_db():
     db = sqlite3.connect(DATABASE)
     db.execute("""
+        CREATE TABLE IF NOT EXISTS applications (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            name          TEXT NOT NULL,
+            url           TEXT,
+            administrator TEXT,
+            workflow_id   TEXT NOT NULL DEFAULT 'GITHUB_OSS_1'
+        )
+    """)
+    db.execute("""
         CREATE TABLE IF NOT EXISTS flags (
-            value            TEXT PRIMARY KEY,
-            application_name TEXT NOT NULL,
-            description      TEXT,
-            status           TEXT NOT NULL DEFAULT 'NOT_FOUND_YET',
-            owner            TEXT NOT NULL DEFAULT 'NA',
-            severity         TEXT NOT NULL DEFAULT 'NA',
-            created_at       TEXT NOT NULL,
-            updated_at       TEXT NOT NULL
+            value          TEXT PRIMARY KEY,
+            application_id INTEGER NOT NULL REFERENCES applications(id),
+            description    TEXT,
+            status         TEXT NOT NULL DEFAULT 'NOT_FOUND_YET',
+            owner          TEXT NOT NULL DEFAULT 'NA',
+            severity       TEXT NOT NULL DEFAULT 'NA',
+            created_at     TEXT NOT NULL,
+            updated_at     TEXT NOT NULL
         )
     """)
     db.commit()

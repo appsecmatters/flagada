@@ -25,9 +25,9 @@ class TestValidateFlag(unittest.TestCase):
         app.config["TESTING"] = True
         self.client = app.test_client()
         db.init_db()
-        self.mock_user_exists = patch("routes.validate_flag.github_user_exists", return_value=True).start()
-        self.mock_create_repo = patch("routes.validate_flag.create_repository", return_value=True).start()
-        self.mock_invite = patch("routes.validate_flag.invite_collaborator", return_value=True).start()
+        resp = self.client.post("/applications", json={"name": "app1"}, headers={"Authorization": f"Bearer {_make_token()}"})
+        self.app_id = resp.get_json()["id"]
+        self.mock_workflow = patch("routes.validate_flag.execute_workflow", return_value=None).start()
 
     def tearDown(self):
         patch.stopall()
@@ -39,7 +39,7 @@ class TestValidateFlag(unittest.TestCase):
         return {"Authorization": f"Bearer {_make_token()}"}
 
     def _post_flag(self, **kwargs):
-        return self.client.post("/flags", json={"value": VALID_VALUE, "application_name": "app1", **kwargs}, headers=self._auth())
+        return self.client.post("/flags", json={"value": VALID_VALUE, "application_id": self.app_id, **kwargs}, headers=self._auth())
 
     def _hashed_value(self):
         return hashlib.sha256(VALID_VALUE.encode()).hexdigest()
@@ -79,14 +79,14 @@ class TestValidateFlag(unittest.TestCase):
 
     def test_invite_failure_returns_500(self):
         self._post_flag()
-        self.mock_invite.return_value = False
+        self.mock_workflow.return_value = ("GitHub invite could not be sent to user user1", 500)
         response = self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_json()["message"], "GitHub invite could not be sent to user user1")
 
     def test_invite_failure_does_not_update_status(self):
         self._post_flag()
-        self.mock_invite.return_value = False
+        self.mock_workflow.return_value = ("GitHub invite could not be sent to user user1", 500)
         self.client.post("/validateFlag", json={"value": VALID_VALUE, "owner": "user1"})
         row = self.client.get(f"/flags/{self._hashed_value()}", headers=self._auth()).get_json()
         self.assertEqual(row["status"], "NOT_FOUND_YET")

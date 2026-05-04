@@ -12,7 +12,8 @@ sequenceDiagram
 
     Admin->>App: Include Flags in App container
     Admin->>App: Deploy App container
-    Admin->>Flagada: Import Flag hashes (POST /flags)
+    Admin->>Flagada: Create app (POST /applications with workflow type)
+    Admin->>Flagada: Import Flag hashes for this app(POST /flags)
     Flagada->>DB: Persist double hashes of flags
     Admin->>GitHub: Update security policy with how to submit flag hashes
     Admin-->>GitHub: Optional: description of flags, naming convention, severity and payouts

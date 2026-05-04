@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 
 from db import get_db
-from github_helper import create_repository, github_user_exists, invite_collaborator
 from routes.flags import _validate_value
+from workflow_helper import execute_workflow
 
 bp = Blueprint("validate", __name__)
 
@@ -46,14 +46,10 @@ def validate_flag():
         logging.error("Unexpected error: status is %s", status)
         return jsonify({"found": False}), 200
 
-    if not github_user_exists(userid=owner):
-        return jsonify({"message": f"GitHub user {owner} does not exist"}), 422
-    if not create_repository(flag=value):
-        return jsonify({"message": f"GitHub repository could not be created for flag {value}"}), 500
-    
-    invited = invite_collaborator(username=owner, flag=value)
-    if not invited:
-        return jsonify({"message": f"GitHub invite could not be sent to user {owner}"}), 500
+    err = execute_workflow(flag=value, userid=owner)
+    if err:
+        message, status_code = err
+        return jsonify({"message": message}), status_code
 
     db.execute(
         "UPDATE flags SET status = 'FOUND', owner = ?, updated_at = ? WHERE value = ?",
