@@ -1,8 +1,10 @@
-# Flagada
+# flagADA
 
 A lightweight Python tool to manage (via API) proof of exploits for bug bounty programs.
 
 Why/when should I use it? Get the context of [what really matters](https://appsecmatters.com/proof_of_exploit.html)
+
+NB: The name stands for "flag Another Defender Approach". Don't hesitate to open a PR with a better naming.
 
 ## Configuration
 
@@ -28,12 +30,12 @@ API will be available under http://127.0.0.1:5000
 ## Documentation
 
 Proposed workflow for public GitHub repository is described in [sequence diagram](github_oss1.md).  
-Flagada API generated docs are available in the `/docs` folder.
+flagADA API generated docs are available in the `/docs` folder.
 
 ### Threat model
 
-Flagada, as a 3rd party tool, does not manage nor store sensitive bug bounty reports. It only helps processing proof of exploits via flags.  
-Flagada does not know the flag values: the bug bounty admin and the security researcher provide a SHA256 of it.  
+flagADA, as a 3rd party tool, does not manage nor store sensitive bug bounty reports. It only helps processing proof of exploits via flags.  
+flagADA does not know the flag values: the bug bounty admin and the security researcher provide a SHA256 of it.  
 This is considered good enough as anyhow the values should not be too easily predictable, otherwise the researcher would just bruteforce them.
 
 The flag hashes are also hashed another time before being stored in database to protect from anyone having access to the Sqlite DB file.
@@ -46,3 +48,4 @@ For defense in depth, it is recommended to only make the `/validate_flag` endpoi
 You can code your own workflow. To do so:
 1. In `routes/applications.py`, update `_VALID_WORKFLOWS` enum (e.g. replace TBD_WORKFLOW1)
 2. In `workflow_helper.py`, update execute_workflow with the code required (getting inspiration from method _run_github_oss_1)
+3. Create an application with POST `/applications` and this new `worlfow_id`

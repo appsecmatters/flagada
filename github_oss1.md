@@ -20,35 +20,35 @@ Identified drawbacks
 sequenceDiagram
     actor Researcher as Security Researcher
     participant GitHub2 as GitHub Private Repo for Flag details
-    participant Flagada
-    participant DB as Flagada Sqlite DB
+    participant flagADA
+    participant DB as flagADA Sqlite DB
     participant App as Deployed App with Flags
     actor Admin as Bug Bounty Admin
     participant GitHub as GitHub OSS Repo
 
     Admin->>App: Include Flags in App container
     Admin->>App: Deploy App container
-    Admin->>Flagada: Create app (POST /applications with workflow type)
-    Admin->>Flagada: Import Flag hashes for this app (POST /flags)
-    Flagada->>DB: Persist double hashes of flags
+    Admin->>flagADA: Create app (POST /applications with workflow type)
+    Admin->>flagADA: Import Flag hashes for this app (POST /flags)
+    flagADA->>DB: Persist double hashes of flags
     Admin->>GitHub: Update security policy with how to submit flag hashes
     Admin-->>GitHub: Optional: description of flags, naming convention, severity and payouts
     
     Researcher->>GitHub: Read security policy
     Researcher->>App: Look for flags
 
-    Researcher->>Flagada: Submit flag hash (POST /validateFlag) and GitHub userid
-    Flagada->>DB: Lookup hash(flag hash)
-    Flagada->>Flagada: Trigger workflow of corresponding app
+    Researcher->>flagADA: Submit flag hash (POST /validateFlag) and GitHub userid
+    flagADA->>DB: Lookup hash(flag hash)
+    flagADA->>flagADA: Trigger workflow of corresponding app
 
-    Flagada->>GitHub2: Create dedicated private repo
-    Flagada->>GitHub2: Invite researcher with GitHub userid
+    flagADA->>GitHub2: Create dedicated private repo
+    flagADA->>GitHub2: Invite researcher with GitHub userid
     GitHub2->>Researcher: Invitation
-    Flagada->>DB: Flag state = FOUND
+    flagADA->>DB: Flag state = FOUND
     GitHub2-->>Admin: Optional: GitHub webhook flag discovered
 
     Admin->>App: Rotate flag
-    Admin->>Flagada: Import New flag hash
+    Admin->>flagADA: Import New flag hash
 
     Researcher->>GitHub2: Accept invite
 
