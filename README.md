@@ -2,7 +2,7 @@
 
 A lightweight Python tool to manage (via API) proof of exploits for bug bounty programs.
 
-Why/when should I use it? Get the context of [what really matters](https://appsecmatters.com/proof_of_exploit.html)
+Why/when should I use it? Get the context of [what really matters](https://appsecmatters.com/bug_bounty_future.html)
 
 NB: The name stands for "flag Another Defender Approach". Don't hesitate to open a PR with a better naming.
 
