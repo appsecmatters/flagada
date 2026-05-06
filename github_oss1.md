@@ -59,4 +59,4 @@ sequenceDiagram
     Admin->>Researcher: Confirm report
 ```
 
-NB: The detailed documentation of the Flagadi API can be found in the `/docs` folder
+NB: The detailed documentation of the flagADA API can be found in the `/docs` folder
